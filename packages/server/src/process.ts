@@ -4,6 +4,7 @@ import { NodeHttpServer } from "@effect/platform-node"
 import { Bus } from "@opencode/core/bus"
 import { Config } from "@opencode/core/config"
 import { Location } from "@opencode/core/location"
+import { LocationLifecycle } from "@opencode/core/location-lifecycle"
 import { LocationServiceMap } from "@opencode/core/location-services"
 import { ManagedPolicy } from "@opencode/core/managed-policy"
 import { AbsolutePath } from "@opencode/core/schema"
@@ -134,17 +135,20 @@ export const start = Effect.fn("ServerProcess.start")(function* <E, R>(
       policy: (directory: string, action: ConfigPolicy.Action, resource: string) =>
         Stream.unwrap(
           Effect.gen(function* () {
-            // Held for the stream's life, so this Location's config and Console plugin keep running.
             const location = yield* locations.contextEffect(
               Location.Ref.make({ directory: AbsolutePath.make(directory) }),
             )
+            const lifecycle = Context.get(location, LocationLifecycle.Service)
+            // Keep the idle sweep from evicting it, and let go once it shuts down (a reload) to read the replacement.
+            yield* lifecycle.retain
             const config = Context.get(location, Config.Service)
             return Stream.concat(Stream.make(undefined), bus.subscribe(ConfigEvent.Updated)).pipe(
               Stream.mapEffect(() => config.entries()),
               Stream.map((entries) => ManagedPolicy.match(ManagedPolicy.statements(entries), action, resource)),
+              Stream.interruptWhen(lifecycle.awaitShutdown),
             )
           }),
-        ),
+        ).pipe(Stream.forever),
       shutdown: shutdown.await,
       updateAvailable: (version: string) =>
         bus.publish(InstallationEvent.UpdateAvailable, { version }).pipe(Effect.asVoid),
