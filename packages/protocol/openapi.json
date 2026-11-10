@@ -16367,7 +16367,8 @@
                     "mcp.use",
                     "skill.use",
                     "plugin.use",
-                    "websearch.use"
+                    "websearch.use",
+                    "remote.use"
                   ]
                 },
                 "resource": {
@@ -16743,7 +16744,8 @@
                         "mcp.use",
                         "skill.use",
                         "plugin.use",
-                        "websearch.use"
+                        "websearch.use",
+                        "remote.use"
                       ]
                     },
                     "resource": {

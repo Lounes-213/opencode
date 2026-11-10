@@ -2389,6 +2389,7 @@ export type ConfigEntry =
             | "skill.use"
             | "plugin.use"
             | "websearch.use"
+            | "remote.use"
           resource: string
           effect: "allow" | "deny"
         }>
@@ -2567,6 +2568,7 @@ export type ConfigEntry =
               | "skill.use"
               | "plugin.use"
               | "websearch.use"
+              | "remote.use"
             resource: string
             effect: "allow" | "deny"
           }>
