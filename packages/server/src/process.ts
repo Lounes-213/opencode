@@ -2,6 +2,13 @@ export * as ServerProcess from "./process"
 
 import { NodeHttpServer } from "@effect/platform-node"
 import { Bus } from "@opencode/core/bus"
+import { Config } from "@opencode/core/config"
+import { Location } from "@opencode/core/location"
+import { LocationServiceMap } from "@opencode/core/location-services"
+import { ManagedPolicy } from "@opencode/core/managed-policy"
+import { AbsolutePath } from "@opencode/core/schema"
+import { Event as ConfigEvent } from "@opencode/schema/config"
+import type { ConfigPolicy } from "@opencode/schema/config/policy"
 import { SessionRestart } from "@opencode/core/session/execution/restart"
 import { Schedule } from "@opencode/core/schedule"
 import { InstallationEvent } from "@opencode/schema/installation-event"
@@ -10,7 +17,7 @@ import { hasPersistentPtyConnectTicketURL } from "@opencode/protocol/groups/pers
 import { hasMcpClientTicketURL } from "@opencode/protocol/groups/mcp"
 import { isPairingConnectURL } from "@opencode/protocol/groups/server"
 import { Global } from "@opencode/util/global"
-import { Cause, Context, Effect, Exit, Latch, Layer, Option, Ref, Scope } from "effect"
+import { Cause, Context, Effect, Exit, Latch, Layer, Option, Ref, Scope, Stream } from "effect"
 import { HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/http"
 import { NetAddress } from "effect/net"
 import { createServer } from "node:http"
@@ -120,8 +127,24 @@ export const start = Effect.fn("ServerProcess.start")(function* <E, R>(
     yield* Ref.set(application, Option.some(Context.get(context, HttpRouter.HttpRouter).asHttpEffect()))
     yield* status.ready
     const bus = Context.get(context, Bus.Service)
+    const locations = Context.get(context, LocationServiceMap.Service)
     return {
       address: bound.http.address,
+      /** The statement deciding `action` on `resource` in the Location at `directory`, again after each config change. */
+      policy: (directory: string, action: ConfigPolicy.Action, resource: string) =>
+        Stream.unwrap(
+          Effect.gen(function* () {
+            // Held for the stream's life, so this Location's config and Console plugin keep running.
+            const location = yield* locations.contextEffect(
+              Location.Ref.make({ directory: AbsolutePath.make(directory) }),
+            )
+            const config = Context.get(location, Config.Service)
+            return Stream.concat(Stream.make(undefined), bus.subscribe(ConfigEvent.Updated)).pipe(
+              Stream.mapEffect(() => config.entries()),
+              Stream.map((entries) => ManagedPolicy.match(ManagedPolicy.statements(entries), action, resource)),
+            )
+          }),
+        ),
       shutdown: shutdown.await,
       updateAvailable: (version: string) =>
         bus.publish(InstallationEvent.UpdateAvailable, { version }).pipe(Effect.asVoid),

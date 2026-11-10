@@ -41,6 +41,11 @@ describe("Config.Entry", () => {
     expect(Schema.encodeSync(Config.Info)(Schema.decodeUnknownSync(Config.Info)(input))).toEqual(input)
   })
 
+  test("round-trips remote.use statements", () => {
+    const input = { policies: [{ action: "remote.use", resource: "*", effect: "deny" }] } as const
+    expect(Schema.encodeSync(Config.Info)(Schema.decodeUnknownSync(Config.Info)(input))).toEqual(input)
+  })
+
   test("normalizes legacy prefixed integration.use statements into mcp.use, skill.use and plugin.use", () => {
     const decode = Schema.decodeUnknownSync(Schema.Array(ConfigPolicy.Info))
     expect(

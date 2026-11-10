@@ -194,14 +194,21 @@ const processEffect = Effect.fnUntraced(function* (options: Options) {
           bound === "0.0.0.0" || bound === "::"
             ? `127.0.0.1:${server.address.port}`
             : NetAddress.formatInet(server.address)
+        // Policy is read in the service's own Location, its working directory (home), whose config merges managed
+        // policy, the Console organization's policy and the user's config.
         yield* Effect.forkScoped(
-          RemoteTunnel.run({
-            route: config.remote.route,
-            target,
-            onURL: (url) => {
-              remote.urls = url === undefined ? [] : [url]
-            },
-          }),
+          RemoteTunnel.follow({
+            policy: server.policy(process.cwd(), "remote.use", "opentunnel"),
+            tunnel: RemoteTunnel.run({
+              route: config.remote.route,
+              target,
+              onURL: (url) => {
+                remote.urls = url === undefined ? [] : [url]
+              },
+            }),
+          }).pipe(
+            Effect.catch((cause) => Effect.logError("remote access stays off: failed to read policy", { cause })),
+          ),
         )
       }
       const url = HttpServer.formatAddress(server.address)

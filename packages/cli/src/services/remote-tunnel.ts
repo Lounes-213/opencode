@@ -1,7 +1,7 @@
 export * as RemoteTunnel from "./remote-tunnel"
 
 import type { OpenTunnelError } from "@opentunnel/client/effect"
-import { Cause, Effect, Schedule } from "effect"
+import { Cause, Effect, FiberHandle, Schedule, Stream } from "effect"
 import { EOL } from "os"
 
 // OpenTunnel keeps one tunnel per device in its default profile, shared by the opentunnel CLI and every app
@@ -46,6 +46,24 @@ export const run = Effect.fnUntraced(function* (input: {
     ),
   )
 })
+
+// A `remote.use` deny policy turns remote access off: the tunnel runs only while no deny matches, stops when one
+// arrives and starts again once it is lifted. The `remote` setting itself is left alone.
+export const follow = Effect.fnUntraced(function* <E, F>(input: {
+  readonly policy: Stream.Stream<{ readonly effect: "allow" | "deny"; readonly message: string } | undefined, F>
+  readonly tunnel: Effect.Effect<void, E>
+}) {
+  const tunnel = yield* FiberHandle.make<void, E>()
+  yield* input.policy.pipe(
+    Stream.map((statement) => (statement?.effect === "deny" ? statement.message : undefined)),
+    Stream.changes,
+    Stream.runForEach((denied) =>
+      denied === undefined
+        ? FiberHandle.run(tunnel, input.tunnel, { onlyIfMissing: true })
+        : FiberHandle.clear(tunnel).pipe(Effect.andThen(Effect.logWarning(`remote access turned off: ${denied}`))),
+    ),
+  )
+}, Effect.scoped)
 
 // A device without a tunnel creates its shared one here, in the foreground, because issuing the certificate
 // takes a while; the service then only attaches its route on start. An interrupted issuance resumes next time.
