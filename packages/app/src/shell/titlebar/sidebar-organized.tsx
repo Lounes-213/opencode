@@ -31,7 +31,7 @@ import { useTabs, type Tab } from "@/shell/tabs/tabs"
 import { pathKey } from "@/workspaces/path-key"
 import "./tab-nav.css"
 import { ProjectSessionRow } from "./project-session-row"
-import { mergeSidebarSessions } from "./sidebar-sessions"
+import { isSidebarSessionActivity, mergeSidebarSessions } from "./sidebar-sessions"
 
 const SidebarState = Persistence.struct({
   projectsCollapsed: Schema.Boolean,
@@ -59,11 +59,11 @@ export function SidebarOrganized(props: {
       if (!ctx) return
       onCleanup(
         ctx.data.listen(({ details }) => {
-          const sessionID = "sessionID" in details.data ? details.data.sessionID : undefined
+          if (!isSidebarSessionActivity(details)) return
+          const sessionID = details.data.sessionID
           const preview = tabs.preview()
 
           if (
-            sessionID &&
             preview?.server === server &&
             (preview.sessionId === sessionID || preview.sessionId === ctx.data.session.root(sessionID))
           )
