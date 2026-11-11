@@ -526,52 +526,53 @@ export function CurrentContextToolGroup(props: {
   })
 
   const items = createMemo(() =>
-    (props.open ? props.parts : []).reduce<
-      (SessionMessageAssistantTool[] | Exclude<ContextGroupPart, SessionMessageAssistantTool>)[]
-    >((groups, tool) => {
-      if (tool.type !== "tool") {
-        groups.push(tool)
+    props.parts.reduce<(SessionMessageAssistantTool[] | Exclude<ContextGroupPart, SessionMessageAssistantTool>)[]>(
+      (groups, tool) => {
+        if (tool.type !== "tool") {
+          groups.push(tool)
+
+          return groups
+        }
+
+        const previous = groups.at(-1)
+
+        if (isFileChangeTool(tool) && Array.isArray(previous) && previous[0] && isFileChangeTool(previous[0])) {
+          previous.push(tool)
+
+          return groups
+        }
+
+        if (
+          currentToolGroupedRead(tool) &&
+          Array.isArray(previous) &&
+          previous[0] &&
+          currentToolGroupedRead(previous[0])
+        ) {
+          previous.push(tool)
+
+          return groups
+        }
+
+        if (
+          tool.name === "skill" &&
+          tool.state.status !== "error" &&
+          currentSkillName(tool) &&
+          Array.isArray(previous) &&
+          previous?.[0]?.name === "skill" &&
+          previous[0].state.status !== "error" &&
+          currentSkillName(previous[0])
+        ) {
+          previous.push(tool)
+
+          return groups
+        }
+
+        groups.push([tool])
 
         return groups
-      }
-
-      const previous = groups.at(-1)
-
-      if (isFileChangeTool(tool) && Array.isArray(previous) && previous[0] && isFileChangeTool(previous[0])) {
-        previous.push(tool)
-
-        return groups
-      }
-
-      if (
-        currentToolGroupedRead(tool) &&
-        Array.isArray(previous) &&
-        previous[0] &&
-        currentToolGroupedRead(previous[0])
-      ) {
-        previous.push(tool)
-
-        return groups
-      }
-
-      if (
-        tool.name === "skill" &&
-        tool.state.status !== "error" &&
-        currentSkillName(tool) &&
-        Array.isArray(previous) &&
-        previous?.[0]?.name === "skill" &&
-        previous[0].state.status !== "error" &&
-        currentSkillName(previous[0])
-      ) {
-        previous.push(tool)
-
-        return groups
-      }
-
-      groups.push([tool])
-
-      return groups
-    }, []),
+      },
+      [],
+    ),
   )
 
   const patchKeys = createMemo(() => {
@@ -610,7 +611,7 @@ export function CurrentContextToolGroup(props: {
         compact
         hasContent
         allowOpenWhilePending
-        open={props.open}
+        open={true}
         onOpenChange={change}
         trigger={
           <div data-component="context-tool-group-trigger" aria-label={label().text}>
