@@ -2,7 +2,7 @@ import { createMemo, For, Match, Show, Switch, type Accessor, type JSX } from "s
 import { Option, Schema } from "effect"
 import { useI18n } from "@opencode/ui/context/i18n"
 import { Collapsible } from "@opencode/ui/collapsible"
-import type { IconProps } from "@opencode/ui/icon"
+import { Icon, type IconProps } from "@opencode/ui/icon"
 import { TextShimmer } from "@opencode/ui/text-shimmer"
 import { createDisclosure } from "./disclosure"
 
@@ -88,6 +88,11 @@ export function BasicTool(props: BasicToolProps) {
       data-clickable={props.clickable ? "true" : undefined}
       data-hide-details={props.hideDetails ? "true" : undefined}
     >
+      <Show when={props.icon}>
+        <span class="inline-flex items-center justify-center w-4 h-4 mr-2 shrink-0 text-v2-icon-icon-muted">
+          <Icon name={props.icon} class={pending() ? "animate-spin" : undefined} />
+        </span>
+      </Show>
       <div data-slot="basic-tool-tool-trigger-content">
         <div data-slot="basic-tool-tool-info">
           <Switch>

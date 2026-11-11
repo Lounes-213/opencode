@@ -248,6 +248,48 @@
   }
 }
 
+@keyframes toolItemFadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(1.5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+[data-slot="context-tool-group-item"] {
+  animation: toolItemFadeSlideIn 240ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+[data-slot="context-tool-group-item"]:nth-child(1) {
+  animation-delay: 0ms;
+}
+[data-slot="context-tool-group-item"]:nth-child(2) {
+  animation-delay: 35ms;
+}
+[data-slot="context-tool-group-item"]:nth-child(3) {
+  animation-delay: 70ms;
+}
+[data-slot="context-tool-group-item"]:nth-child(4) {
+  animation-delay: 105ms;
+}
+[data-slot="context-tool-group-item"]:nth-child(5) {
+  animation-delay: 140ms;
+}
+[data-slot="context-tool-group-item"]:nth-child(n + 6) {
+  animation-delay: 175ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="context-tool-group-item"] {
+    animation: none !important;
+  }
+}
+
 [data-component="task-tool-card"] {
   width: 100%;
   min-width: 0;
