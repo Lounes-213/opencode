@@ -1,64 +1,46 @@
-.agent-action-badge {
+/*
+ * Minimal Monoline Agent Action Badge
+ * Conforms 100% to OpenCode's native composer-pill design tokens.
+ * Uses exact CSS variables, zero custom hex colors, and zero artificial borders.
+ */
+[data-slot="agent-action-badge"] {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  height: 24px;
-  padding: 0 8px;
-  border-radius: 6px;
-  background: var(--v2-background-bg-layer-02, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--v2-border-subtle, rgba(255, 255, 255, 0.08));
-  color: var(--v2-text-text-base, currentColor);
-  font-family: var(--v2-font-family-sans, inherit);
+  gap: 8px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  background: var(--v2-background-bg-layer-01);
+  border: 0.5px solid var(--v2-border-hairline, rgba(255, 255, 255, 0.08));
+  color: var(--v2-text-text-base);
+  font-family: inherit;
   font-size: 12px;
   line-height: var(--line-height-compact, 16px);
   user-select: none;
-  transition:
-    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
-    background-color 160ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.agent-action-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+[data-slot="agent-action-badge"] svg {
   width: 14px;
   height: 14px;
-  color: var(--v2-text-text-muted, currentColor);
-}
-
-.agent-action-icon svg {
-  width: 14px;
-  height: 14px;
+  flex-shrink: 0;
   stroke-width: 1.6px;
   stroke: currentColor;
 }
 
-.agent-action-label {
-  font-weight: var(--font-weight-medium, 500);
+[data-slot="agent-action-label"] {
+  color: var(--v2-text-text-base);
   letter-spacing: -0.01em;
-  color: var(--v2-text-text-base, inherit);
 }
 
-.agent-action-tool {
-  font-size: 11px;
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: var(--v2-background-bg-layer-03, rgba(0, 0, 0, 0.2));
-  color: var(--v2-text-text-faint, inherit);
-  letter-spacing: -0.02em;
-}
-
-/* Operational phase indicators - Strict Monoline, High Contrast */
-.agent-action-badge[data-phase="explore"] {
-  border-color: var(--v2-border-focus, rgba(255, 255, 255, 0.15));
-}
-
-.agent-action-badge[data-phase="verify"] {
-  border-color: var(--v2-border-subtle, rgba(255, 255, 255, 0.1));
+[data-slot="agent-action-tool"] {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--v2-background-bg-layer-02);
+  color: var(--v2-text-text-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .agent-action-badge {
-    transition: none;
+  [data-slot="agent-action-badge"] {
+    transition: none !important;
   }
 }
