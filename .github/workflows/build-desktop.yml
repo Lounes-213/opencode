@@ -1,0 +1,41 @@
+name: Build OpenCode Desktop EXE
+
+on:
+  push:
+    branches:
+      - status-badge
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          bun install
+
+      - name: Build Desktop Application
+        run: |
+          cd packages/desktop
+          bun run build
+          bun run pack
+
+      - name: Upload Windows Executable Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: opencode-desktop-windows
+          path: dist/desktop/*
+          retention-days: 7
